@@ -1,0 +1,10 @@
+<SeqmatchDataSet releaseVersion="test bean 1.0" >
+  <SeqmatchCategory istype="false" isenv="true" islong="false" islowqual="false">
+    <MemoryFile name="nontype_env_short.trainee"></MemoryFile>
+  </SeqmatchCategory>
+  <SeqmatchCategory istype="false" isenv="false" islong="false" islowqual="false">
+    <MemoryFile name="nontype_iso_short.trainee"></MemoryFile>
+  </SeqmatchCategory>  
+</SeqmatchDataSet>
+
+
