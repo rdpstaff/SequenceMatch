@@ -1,0 +1,8 @@
+kmer based sequence matching tool
+
+QUICKSTART
+==========
+Depends on ReadSeq
+
+ant jar
+java -jar dist/SequenceMatch.jar
