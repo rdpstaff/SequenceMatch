@@ -90,6 +90,9 @@ public class StorageTrainee implements Trainee {
         ByteBuffer rawSeqIDs = rawBuffer.slice();
         seqIDs = rawSeqIDs.asCharBuffer();
 
+        /* This is not neccessary if the files were built using the same Trainee.NAME_SIZE.
+         * It failed to find the correct nameSize if the first seqname size is 20 because it searches for a first space in seqnames
+         * 
         boolean firstId = true;
         int nextIdStart = -1;
 
@@ -114,7 +117,7 @@ public class StorageTrainee implements Trainee {
                 seqIDs = rawSeqIDs.asCharBuffer();
                 nameSize = nextIdStart;
             }
-        }
+        } */
 
         currentPosition = rawBuffer.limit();
 

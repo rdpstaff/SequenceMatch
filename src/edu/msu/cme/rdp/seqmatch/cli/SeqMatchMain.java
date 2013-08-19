@@ -21,14 +21,15 @@ import edu.msu.cme.rdp.readseq.readers.SequenceReader;
 import edu.msu.cme.rdp.readseq.readers.SeqReader;
 import edu.msu.cme.rdp.readseq.readers.Sequence;
 import edu.msu.cme.rdp.readseq.utils.SeqUtils;
-import edu.msu.cme.rdp.seqmatch.core.SeqMatch;
-import edu.msu.cme.rdp.seqmatch.core.SeqMatchResult;
-import edu.msu.cme.rdp.seqmatch.core.SeqMatchResultSet;
+import edu.msu.cme.rdp.seqmatch.core.*;
 import edu.msu.cme.rdp.seqmatch.train.ConcreteTrainee;
 import edu.msu.cme.rdp.seqmatch.train.StorageTrainee;
+import edu.msu.cme.rdp.seqmatch.train.Trainee;
 import java.io.File;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -59,15 +60,16 @@ public class SeqMatchMain {
 
         if (cmd.equals("train")) {
             if (args.length != 2) {
-                System.err.println("USAGE: train <reference sequences> <training_out_file>");
+                System.err.println("USAGE: train <reference sequences> <trainee_out_file_prefix>" +
+                        "\nMultiple trainee output files might be created, each containing maximum " + Trainee.MAX_NUM_SEQ + " sequences");
                 return;
             }
 
             File refSeqs = new File(args[0]);
             File traineeFileOut = new File(args[1]);
 
-            ConcreteTrainee trainee = CLISeqMatchFactory.getTraineeFactory().train(refSeqs);
-            trainee.save(traineeFileOut);
+            //maybe more than 1 trainee files need to be created, depending on the number of seqs
+            CreateMultiMatchFromFile.getMultiTrainee(refSeqs, traineeFileOut);
         } else if (cmd.equals("seqmatch")) {
             File refFile = null;
             File queryFile = null;
@@ -96,20 +98,32 @@ public class SeqMatchMain {
                 queryFile = new File(args[1]);
 
             } catch (Exception e) {
-                new HelpFormatter().printHelp("seqmatch <refseqs | trainee_file> <query_file>", options);
+                new HelpFormatter().printHelp("seqmatch <refseqs | trainee_file_or_dir> <query_file>\n" +
+                        " trainee_file_or_dir is a single trainee file or a directory containing multiple trainee files", options);
                 System.err.println("Error: " + e.getMessage());
                 return;
             }
             PrintStream out = new PrintStream(System.out);
 
             SeqMatch seqmatch = null;
-            if (SeqUtils.guessFileFormat(refFile) == SequenceFormat.UNKNOWN) {
-                seqmatch = CLISeqMatchFactory.trainTwowaySeqMatch(new StorageTrainee(refFile));
-            } else {
-                seqmatch =  CreateMultiMatchFromFile.getMultiMatch(refFile);
+            if ( refFile.isDirectory()){  // a directory of trainee files
+                List<SeqMatch> engineList = new ArrayList<SeqMatch>();
+                for ( File f: refFile.listFiles()){
+                    if ( !f.isHidden()){
+                        TwowaySeqMatch match = new TwowaySeqMatch(new SeqMatchEngine(new StorageTrainee(f)));
+                        engineList.add(match);
+                    }
+                }
+                 seqmatch = new MultiTraineeSeqMatch(engineList);
+            }else {  // a single fasta file or trainee file
+                if (SeqUtils.guessFileFormat(refFile) == SequenceFormat.UNKNOWN) {
+                    seqmatch = CLISeqMatchFactory.trainTwowaySeqMatch(new StorageTrainee(refFile));
+                } else {
+                    seqmatch =  CreateMultiMatchFromFile.getMultiMatch(refFile);
+                }
             }
 
-            out.println("query name\ttarget seq\torientation\tS_ab score\tunique common oligomers");
+            out.println("query name\tmatch seq\torientation\tS_ab score\tunique common oligomers");
 
             SeqReader reader = new SequenceReader(queryFile);
             Sequence seq;
@@ -122,7 +136,6 @@ public class SeqMatchMain {
                         r = '-';
                     }
 
-                        out.println(seq.getSeqName() + "\t" + result.getSeqName() + "\t" + r + "\t" + result.getScore() + "\t" + result.getWordCount());
                     if (result.getScore() > minSab) {
                         out.println(seq.getSeqName() + "\t" + result.getSeqName() + "\t" + r + "\t" + result.getScore() + "\t" + result.getWordCount());
                     }
@@ -130,6 +143,8 @@ public class SeqMatchMain {
             }
 
             out.close();
+        }else {
+            throw new IllegalArgumentException("USAGE: SeqMatchMain [train|seqmatch] <args>");
         }
     }
 }

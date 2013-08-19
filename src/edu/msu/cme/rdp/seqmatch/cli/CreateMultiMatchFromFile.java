@@ -84,5 +84,49 @@ public class CreateMultiMatchFromFile {
 
     }
     
+    public static void getMultiTrainee(File traineeFile, File outprefix) throws IOException {
+        TraineeFactory factory = new TraineeFactory();
+        List<SeqMatch> engineList = new ArrayList<SeqMatch>();
+        SequenceReader parser = null;
+        int seqCount = 0;
+        int fileCount = 1;
+
+        parser = new SequenceReader(traineeFile);
+        Sequence seq;
+        File tmpFile = File.createTempFile("tempTrainee_" + fileCount, ".fa");
+        
+        tmpFile.deleteOnExit();
+        
+        BufferedWriter writer = new BufferedWriter(new FileWriter(tmpFile));
+        // this may create multiple matches, for the limit of sequences for each trainee is SHORT.MAX_VALUE
+        while ((seq = parser.readNextSequence()) != null) {
+            if (seqCount == Trainee.MAX_NUM_SEQ) {
+                // make one trainee
+                writer.close();
+                ConcreteTrainee trainee = (ConcreteTrainee) factory.train(tmpFile);
+                trainee.save( new File(outprefix + "_" + String.valueOf(fileCount) + ".trainee"));                
+                tmpFile.delete();
+
+                // create the next one                		
+                seqCount = 0;
+                tmpFile = File.createTempFile("tempTrainee_" + (++fileCount), ".fa");
+                writer = new BufferedWriter(new FileWriter(tmpFile));
+
+            }
+            writer.write(">" + seq.getSeqName() + "\n" + seq.getSeqString() + "\n");
+            seqCount++;
+        }
+
+        //make the last one
+        writer.close();
+
+        ConcreteTrainee trainee = (ConcreteTrainee) factory.train(tmpFile);
+        if (fileCount == 1){ // there is only one file
+            trainee.save( new File(outprefix + ".trainee"));
+        }else { 
+            trainee.save( new File(outprefix + "_" + String.valueOf(fileCount) + ".trainee"));
+        }
+
+    }
    
 }

@@ -41,7 +41,7 @@ public class TraineeFactory {
 
         try {
             while ((pSeq = parser.readNextSequence()) != null) {
-                if (seqCount == Trainee.MAX_NUM_SEQ) {
+                if (numOfSeqs == Trainee.MAX_NUM_SEQ) {  // use numOfSeqs instead of seqCount because seqCount will overflow
                     throw new IOException("Training data cannot have more than " + Trainee.MAX_NUM_SEQ + " sequences");
                 }
 
@@ -69,8 +69,8 @@ public class TraineeFactory {
                 StringBuffer nameBuf = new StringBuffer(origNameBuf.toString());
 
                 name = name.substring(0, Math.min(name.length(), Trainee.NAME_SIZE));
-                if (name.length() > Trainee.NAME_SIZE) {
-                    System.err.println("Warning: the length of seqID: " + name + " exceeds the limit: " + Trainee.NAME_SIZE + " truncating to " + name);
+                if (pSeq.getSeqName().length() > Trainee.NAME_SIZE) {
+                    System.err.println("Warning: the length of seqID: " + pSeq.getSeqName() + " exceeds the limit: " + Trainee.NAME_SIZE + " truncating to " + name);
                 }
                 nameBuf = nameBuf.replace(0, name.length(), name);
 
