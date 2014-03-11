@@ -22,13 +22,16 @@ import edu.msu.cme.rdp.readseq.readers.SeqReader;
 import edu.msu.cme.rdp.readseq.readers.Sequence;
 import edu.msu.cme.rdp.readseq.utils.SeqUtils;
 import edu.msu.cme.rdp.seqmatch.core.*;
-import edu.msu.cme.rdp.seqmatch.train.ConcreteTrainee;
 import edu.msu.cme.rdp.seqmatch.train.StorageTrainee;
 import edu.msu.cme.rdp.seqmatch.train.Trainee;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
@@ -46,8 +49,22 @@ public class SeqMatchMain {
     static {
         options.addOption("k", "knn", true, "Find k nearest neighbors [default = 20]");
         options.addOption("s", "sab", true, "Minimum sab score [default = .5]");
+        options.addOption("d", "desc", true, "A tab-delimited description file containing seqID and description");
     }
 
+    public static HashMap<String, String> readDesc(File infile) throws IOException {
+        HashMap<String, String> descMap = new HashMap<String, String>();
+        BufferedReader reader = new BufferedReader(new FileReader(infile));
+        String line;
+        while( (line=reader.readLine()) != null){
+            String[] val = line.split("\\t");
+            descMap.put(val[0], val[1]);
+        }
+        reader.close();
+        return descMap;
+    }
+    
+    
     public static void main(String[] args) throws Exception {
 
         if (args.length == 0) {
@@ -73,7 +90,8 @@ public class SeqMatchMain {
         } else if (cmd.equals("seqmatch")) {
             File refFile = null;
             File queryFile = null;
-
+            HashMap<String,String> descMap = new HashMap<String, String>();
+            
             int knn = 20;
             float minSab = .5f;
 
@@ -87,7 +105,9 @@ public class SeqMatchMain {
                 if (line.hasOption("sab")) {
                     minSab = Float.parseFloat(line.getOptionValue("sab"));
                 }
-
+                if (line.hasOption("desc")) {
+                    descMap = readDesc(new File(line.getOptionValue("desc")));
+                }
                 args = line.getArgs();
 
                 if (args.length != 2) {
@@ -123,7 +143,7 @@ public class SeqMatchMain {
                 }
             }
 
-            out.println("query name\tmatch seq\torientation\tS_ab score\tunique common oligomers");
+            out.println("query name\tmatch seq\torientation\tS_ab score\tunique oligomers\tdescription");
 
             SeqReader reader = new SequenceReader(queryFile);
             Sequence seq;
@@ -137,7 +157,8 @@ public class SeqMatchMain {
                     }
 
                     if (result.getScore() > minSab) {
-                        out.println(seq.getSeqName() + "\t" + result.getSeqName() + "\t" + r + "\t" + result.getScore() + "\t" + result.getWordCount());
+                        out.println(seq.getSeqName() + "\t" + result.getSeqName() + "\t" + r + "\t" 
+                                + result.getScore() + "\t" + resultSet.getQueryWordCount() + "\t" + descMap.get(result.getSeqName()));
                     }
                 }
             }

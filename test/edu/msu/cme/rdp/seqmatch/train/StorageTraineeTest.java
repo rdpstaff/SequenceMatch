@@ -30,7 +30,7 @@ public class StorageTraineeTest {
     public void testGetSeqName() throws IOException {
         System.out.println("testGetSeqName");
         String seqName = trainee.getSeqName(1);
-        assertEquals(seqName, "AB0390");
+        assertEquals("AB0390", seqName);
         assertEquals(trainee.getNumOfSeqs(), 50);
 
     }

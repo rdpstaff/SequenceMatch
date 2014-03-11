@@ -1,42 +1,8 @@
-Intro
-
-RDP SequenceMatch (http://rdp.cme.msu.edu/seqmatch) is a nearest neighbor sequence matching tool based on the most number of shared kmers between a query and reference sequence.
-
+kmer based sequence matching tool
 
 QUICKSTART
 ==========
-Depends on ReadSeq. See RDPTools (https://github.com/rdpstaff/RDPTools) to install.
+Depends on ReadSeq
 
-----------------------------
-   How to Run SequenceMatch
-----------------------------
-
-1. train SequenceMatch
-This step training the SequenceMatch using a reference sequence file. It creates binary memory-mapping file(s) that can be used as inputs for the following step 2. This step is recommended to saving the time needed to train if the step 2 will be executed multiple times using the same reference sequences, or if reference set is large. Multiple output files might be created, each containing maximum 32768 sequences. If there is only one output file, the filename will be trainee_out_file_prefix.trainee. If there are multiple output files, an incrementing number will be appended to the trainee_out_file_prefix to make the output file names, such as trainee_out_file_prefix_1.trainee, trainee_out_file_prefix_2.trainee, etc.
-
-USAGE: train <reference sequences> <trainee_out_file_prefix>
-
-[Example command from a terminal]: 
-java -jar /path/to/dist/SequenceMatch.jar train ref.fa ref_seqmatch
-
-
-2. Find the K nearest neighbor
-
-This is the main step to fins k nearest neighbor reference sequences for each query sequence. The reference sequences can be plain FASTA file, or a output trainee file, or a directory containing multiple trainee files created from the above step 1. The output lists the best k results for each query in the following five columns:
-query name	match seq	orientation	S_ab score	unique common oligomers
-S_ab indicates the number of (unique) 7-base oligomers shared between query sequence and a match sequence divided by the lowest number of unique oligos in either of the two sequences.
-
-usage: seqmatch <refseqs | trainee_file_or_dir> <query_file>
-                trainee_file_or_dir is a single trainee file or a
-                directory containing prebuilt trainee files
- -k,--knn <arg>   Find k nearest neighbors [default = 20]
- -s,--sab <arg>   Minimum sab score [default = .5]
-
-
-[Example command from a terminal]:
-java -jar /path/to/dist/SequenceMatch.jar seqmatch -k 1 ref.fa query.fa
-
-[Example command from a terminal]:
-java -jar /path/to/dist/SequenceMatch.jar seqmatch -s 0.3 ref_seqmatch query.fa
-
-
+ant jar
+java -jar dist/SequenceMatch.jar
