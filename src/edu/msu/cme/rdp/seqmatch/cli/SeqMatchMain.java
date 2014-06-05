@@ -50,6 +50,7 @@ public class SeqMatchMain {
         options.addOption("k", "knn", true, "Find k nearest neighbors [default = 20]");
         options.addOption("s", "sab", true, "Minimum sab score [default = .5]");
         options.addOption("d", "desc", true, "A tab-delimited description file containing seqID and description");
+        options.addOption("o", "outFile", true, "Write output to a file");
     }
 
     public static HashMap<String, String> readDesc(File infile) throws IOException {
@@ -57,8 +58,15 @@ public class SeqMatchMain {
         BufferedReader reader = new BufferedReader(new FileReader(infile));
         String line;
         while( (line=reader.readLine()) != null){
-            String[] val = line.split("\\t");
-            descMap.put(val[0], val[1]);
+            String[] val = line.split("\\s+");
+            StringBuilder desc = new StringBuilder();
+            if ( val.length > 1) {
+                desc.append(val[1]);
+            }
+            for ( int i = 2; i < val.length; i++){
+                desc.append(" ").append(val[i]);
+            }
+            descMap.put(val[0], desc.toString());
         }
         reader.close();
         return descMap;
@@ -91,7 +99,7 @@ public class SeqMatchMain {
             File refFile = null;
             File queryFile = null;
             HashMap<String,String> descMap = new HashMap<String, String>();
-            
+            PrintStream out = new PrintStream(System.out);
             int knn = 20;
             float minSab = .5f;
 
@@ -108,6 +116,10 @@ public class SeqMatchMain {
                 if (line.hasOption("desc")) {
                     descMap = readDesc(new File(line.getOptionValue("desc")));
                 }
+                if (line.hasOption("outFile")) {
+                    out = new PrintStream(new File(line.getOptionValue("outFile")));
+                }
+                
                 args = line.getArgs();
 
                 if (args.length != 2) {
@@ -123,7 +135,7 @@ public class SeqMatchMain {
                 System.err.println("Error: " + e.getMessage());
                 return;
             }
-            PrintStream out = new PrintStream(System.out);
+            
 
             SeqMatch seqmatch = null;
             if ( refFile.isDirectory()){  // a directory of trainee files
