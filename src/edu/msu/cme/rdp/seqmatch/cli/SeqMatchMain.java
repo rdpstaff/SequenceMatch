@@ -66,7 +66,8 @@ public class SeqMatchMain {
             for ( int i = 2; i < val.length; i++){
                 desc.append(" ").append(val[i]);
             }
-            descMap.put(val[0], desc.toString());
+            int length = val[0].length() > Trainee.NAME_SIZE ? Trainee.NAME_SIZE: val[0].length();
+            descMap.put(val[0].substring(0, length), desc.toString());
         }
         reader.close();
         return descMap;
